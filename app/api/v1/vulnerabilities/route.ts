@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticate } from "@/lib/api-middleware";
+import { serializeVulnerability } from "@/lib/serialize-vulnerability";
 
 const SEVERITY_ORDER: Record<string, number> = { CRITICAL: 1, HIGH: 2, MEDIUM: 3, LOW: 4 };
 
@@ -58,5 +59,5 @@ export async function GET(req: NextRequest) {
     (a, b) => (SEVERITY_ORDER[a.severity] ?? 5) - (SEVERITY_ORDER[b.severity] ?? 5)
   );
 
-  return NextResponse.json({ data: sorted, total, page, limit });
+  return NextResponse.json({ data: sorted.map(serializeVulnerability), total, page, limit });
 }

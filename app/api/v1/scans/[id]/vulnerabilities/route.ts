@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticate } from "@/lib/api-middleware";
+import { serializeVulnerability } from "@/lib/serialize-vulnerability";
 
 export async function GET(
   req: NextRequest,
@@ -14,5 +15,5 @@ export async function GET(
   if (isNaN(scanId)) return NextResponse.json({ error: "invalid scan id" }, { status: 400 });
 
   const vulns = await prisma.vulnerability.findMany({ where: { scanId } });
-  return NextResponse.json(vulns);
+  return NextResponse.json(vulns.map(serializeVulnerability));
 }
