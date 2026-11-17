@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authApi } from "@/lib/api";
@@ -17,16 +17,31 @@ const inputStyle: React.CSSProperties = {
   transition: "border-color 160ms ease, box-shadow 160ms ease",
 };
 
+function ExpiredSessionNotice() {
+  const searchParams = useSearchParams();
+  if (!searchParams.get("expired")) return null;
+
+  return (
+    <div style={{
+      background: "oklch(0.82 0.16 90 / 0.08)",
+      border: "1px solid oklch(0.82 0.16 90 / 0.20)",
+      color: "var(--sev-medium)",
+      borderRadius: 8,
+      padding: "10px 14px",
+      fontSize: 13,
+      marginBottom: 16,
+    }}>
+      Your session has expired. Please sign in again.
+    </div>
+  );
+}
+
 function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [expired, setExpired] = useState(false);
-
-  useEffect(() => { if (searchParams.get("expired")) setExpired(true); }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,19 +65,9 @@ function LoginForm() {
       borderRadius: 14,
       padding: 24,
     }}>
-      {expired && (
-        <div style={{
-          background: "oklch(0.82 0.16 90 / 0.08)",
-          border: "1px solid oklch(0.82 0.16 90 / 0.20)",
-          color: "var(--sev-medium)",
-          borderRadius: 8,
-          padding: "10px 14px",
-          fontSize: 13,
-          marginBottom: 16,
-        }}>
-          Your session has expired. Please sign in again.
-        </div>
-      )}
+      <Suspense fallback={null}>
+        <ExpiredSessionNotice />
+      </Suspense>
       {error && (
         <div style={{
           background: "oklch(0.65 0.24 22 / 0.08)",
@@ -184,17 +189,7 @@ export default function LoginPage() {
             Sign in to your organization
           </p>
         </div>
-        <Suspense fallback={
-          <div style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border-strong)",
-            borderRadius: 14,
-            padding: 24,
-            height: 200,
-          }}/>
-        }>
-          <LoginForm />
-        </Suspense>
+        <LoginForm />
         <p style={{ textAlign: "center", fontSize: 13, color: "var(--fg-dim)", marginTop: 16 }}>
           No account?{" "}
           <Link href="/register" style={{ color: "var(--accent)", fontWeight: 500 }}>
