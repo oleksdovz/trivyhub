@@ -1,5 +1,7 @@
 # TrivyHub
 
+This repository is a fork of [trivyhub/trivy-dashboard-web](https://github.com/trivyhub/trivy-dashboard-web).
+
 Self-hosted dashboard for [Trivy](https://trivy.dev) vulnerability reports. Push scan results from your CI pipelines and visualize them in one place.
 
 ![License](https://img.shields.io/github/license/trivyhub/trivy-dashboard-web)

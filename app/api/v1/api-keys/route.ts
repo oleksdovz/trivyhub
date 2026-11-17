@@ -1,3 +1,4 @@
+import type { ApiKey } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticate, requireRole } from "@/lib/api-middleware";
@@ -9,6 +10,18 @@ function generateKey() {
   const prefix = full.slice(0, 10);
   const hash = createHash("sha256").update(full).digest("hex");
   return { full, prefix, hash };
+}
+
+function serializeApiKey(key: ApiKey) {
+  return {
+    id: key.id,
+    organization_id: key.organizationId,
+    name: key.name,
+    key_prefix: key.keyPrefix,
+    created_at: key.createdAt.toISOString(),
+    last_used_at: key.lastUsedAt?.toISOString() ?? null,
+    revoked: key.revoked,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -23,7 +36,7 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(keys);
+  return NextResponse.json(keys.map(serializeApiKey));
 }
 
 export async function POST(req: NextRequest) {
@@ -42,5 +55,5 @@ export async function POST(req: NextRequest) {
     data: { organizationId: claims.organizationId, name, keyHash: hash, keyPrefix: prefix },
   });
 
-  return NextResponse.json({ ...key, key: full }, { status: 201 });
+  return NextResponse.json({ ...serializeApiKey(key), key: full }, { status: 201 });
 }
