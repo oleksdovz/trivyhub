@@ -22,6 +22,10 @@ RUN DATABASE_URL=file:./dev.db npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# The entrypoint uses Node and Prisma directly; npm is only needed to build.
+RUN rm -rf /usr/local/lib/node_modules/npm \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx
+
 RUN apk add --no-cache openssl
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
