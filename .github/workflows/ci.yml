@@ -11,8 +11,11 @@ permissions:
 
 jobs:
   build-and-scan:
-    name: Build and scan Docker image
+    name: Build, scan, and publish Docker image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -28,3 +31,21 @@ jobs:
             --mount "type=bind,source=${RUNNER_TEMP}/trivyhub.tar,target=/image.tar,readonly" \
             docker.io/aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb \
             image --input /image.tar --scanners vuln
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push scanned image to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          repository="$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          image="ghcr.io/$repository"
+          docker tag trivyhub:ci "$image:$GITHUB_SHA"
+          docker push "$image:$GITHUB_SHA"
+          docker tag trivyhub:ci "$image:latest"
+          docker push "$image:latest"
